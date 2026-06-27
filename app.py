@@ -21,7 +21,7 @@ ODOO_DB = os.environ.get('ODOO_DB', 'la-guardiana-de-characato-prueba-1')
 ODOO_USER = os.environ.get('ODOO_USER', 'logistica2grupolamatrona@outlook.com')
 
 # ¡Corregido! Ahora busca correctamente la variable llamada ODOO_PASSWORD
-ODOO_PASSWORD = os.environ.get('d89bc19cd1886af22be6949bbeca39919678c28a')
+ODOO_PASSWORD = os.environ.get('ODOO_PASSWORD')
 # =====================================================================
 
 def consultar_odoo():
