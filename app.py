@@ -59,25 +59,25 @@ def consultar_odoo():
         print(f"Error en la conexión o consulta a Odoo: {e}")
         return None
 
-@app.route('/api/live-inventario')
+@app.route('/api/live-inventario', methods=['GET', 'OPTIONS'])
 def live_inventario():
-    """Canal en vivo con cabeceras CORS explícitas para evitar bloqueos"""
-    def evento_stream():
-        ultimo_estado = []
-        while True:
-            datos_actuales = consultar_odoo()
-            if datos_actuales is not None and datos_actuales != ultimo_estado:
-                ultimo_estado = datos_actuales
-                yield f"data: {json.dumps(datos_actuales)}\n\n"
-            time.sleep(5)
-            
-    # Creamos la respuesta y le inyectamos manualmente los permisos CORS que el navegador exige
-    response = Response(evento_stream(), mimetype='text/event-stream')
+    """Retorna el inventario en formato JSON estándar con soporte CORS completo"""
+    # Si el navegador hace una pregunta de seguridad previa (OPTIONS)
+    from flask import jsonify
+    
+    datos_actuales = consultar_odoo()
+    
+    if datos_actuales is None:
+        response = jsonify({"error": "No se pudo conectar a Odoo"})
+        response.status_code = 500
+    else:
+        response = jsonify(datos_actuales)
+        
+    # Forzamos las cabeceras CORS estándar que los navegadores aman
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
 if __name__ == '__main__':
-    # Configuración óptima para producción en Render con soporte multi-hilo
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
