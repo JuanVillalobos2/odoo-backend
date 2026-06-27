@@ -18,7 +18,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 ODOO_HOST = os.environ.get('ODOO_HOST', 'la-guardiana-de-characato-prueba-1.odoo.com') 
 ODOO_PORT = int(os.environ.get('ODOO_PORT', 443))
 ODOO_DB = os.environ.get('ODOO_DB', 'la-guardiana-de-characato-prueba-1')
-ODOO_USER = os.environ.get('ODOO_USER', 'logistica2grupolamatrona@outloook.com')
+ODOO_USER = os.environ.get('ODOO_USER', 'logistica2grupolamatrona@outlook.com')
 
 # ¡Corregido! Ahora busca correctamente la variable llamada ODOO_PASSWORD
 ODOO_PASSWORD = os.environ.get('d89bc19cd1886af22be6949bbeca39919678c28a')
