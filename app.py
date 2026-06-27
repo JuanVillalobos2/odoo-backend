@@ -1,32 +1,33 @@
 import os
 import time
 import json
-from flask import Flask, Response
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 import odoorpc
 
 app = Flask(__name__)
-# CORS permite que tu página de Netlify lea los datos de Render sin bloqueos
-# Reemplaza la línea vieja de CORS(app) por estas dos líneas:
+
+# Configuración de CORS avanzada para permitir el tráfico desde Netlify
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 # =====================================================================
 # CONFIGURACIÓN SEGURA MEDIANTE VARIABLES DE ENTORNO (os.environ)
 # =====================================================================
-# Si Render no encuentra la variable, usará el valor por defecto que pongas a la derecha
+# Render leerá estos datos desde su pestaña "Environment" en secreto
 ODOO_HOST = os.environ.get('ODOO_HOST', 'la-guardiana-de-characato-prueba-1.odoo.com') 
 ODOO_PORT = int(os.environ.get('ODOO_PORT', 443))
 ODOO_DB = os.environ.get('ODOO_DB', 'la-guardiana-de-characato-prueba-1')
 ODOO_USER = os.environ.get('ODOO_USER', 'logistica2grupolamtrona@outloook.com')
+
+# ¡Corregido! Ahora busca correctamente la variable llamada ODOO_PASSWORD
 ODOO_PASSWORD = os.environ.get('d89bc19cd1886af22be6949bbeca39919678c28a')
 # =====================================================================
 
 def consultar_odoo():
     """Se conecta a Odoo usando las variables seguras y extrae el inventario."""
-    # Validación básica por si olvidaste configurar la contraseña en Render
-    if not ODOO_PASSWORD:
-        print("Error: La variable ODOO_PASSWORD no está configurada en el servidor.")
+    if not ODOO_PASSWORD or not ODOO_HOST or not ODOO_DB:
+        print("Error: Faltan configurar variables de entorno en el panel de Render.")
         return None
 
     try:
@@ -61,22 +62,29 @@ def consultar_odoo():
 
 @app.route('/api/live-inventario', methods=['GET', 'OPTIONS'])
 def live_inventario():
-    """Retorna el inventario en formato JSON estándar con soporte CORS completo"""
-    # Si el navegador hace una pregunta de seguridad previa (OPTIONS)
-    from flask import jsonify
+    """Maneja las peticiones GET y la verificación de seguridad OPTIONS (Preflight)"""
     
+    # 1. SI EL NAVEGADOR PREGUNTA POR SEGURIDAD (OPTIONS): Respondemos de inmediato con 200 OK
+    if request.method == 'OPTIONS':
+        response = Flask.response_class(status=200)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response
+
+    # 2. SI ES UNA PETICIÓN GET NORMAL: Buscamos los datos en Odoo
     datos_actuales = consultar_odoo()
     
     if datos_actuales is None:
-        response = jsonify({"error": "No se pudo conectar a Odoo"})
+        response = jsonify({"error": "No se pudo conectar a Odoo o faltan datos"})
         response.status_code = 500
     else:
         response = jsonify(datos_actuales)
         
-    # Forzamos las cabeceras CORS estándar que los navegadores aman
+    # Forzamos las cabeceras CORS estándar para que el navegador acepte los datos
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
 if __name__ == '__main__':
