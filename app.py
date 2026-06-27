@@ -7,7 +7,9 @@ import odoorpc
 
 app = Flask(__name__)
 # CORS permite que tu página de Netlify lea los datos de Render sin bloqueos
-CORS(app)
+# Reemplaza la línea vieja de CORS(app) por estas dos líneas:
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # =====================================================================
 # CONFIGURACIÓN SEGURA MEDIANTE VARIABLES DE ENTORNO (os.environ)
