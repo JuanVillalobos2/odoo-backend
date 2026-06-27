@@ -1,4 +1,4 @@
 Flask>=3.0.0
 Flask-Cors>=4.0.0
-odoo-rpc
+OdooRPC>=0.10.0
 gunicorn>=21.2.0
