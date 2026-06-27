@@ -61,22 +61,22 @@ def consultar_odoo():
 
 @app.route('/api/live-inventario')
 def live_inventario():
-    """Mantiene un canal abierto con el navegador (SSE) para actualizar en tiempo real."""
+    """Canal en vivo con cabeceras CORS explícitas para evitar bloqueos"""
     def evento_stream():
         ultimo_estado = []
         while True:
             datos_actuales = consultar_odoo()
-            
-            # Si la consulta funcionó y el stock cambió desde la última revisión...
             if datos_actuales is not None and datos_actuales != ultimo_estado:
                 ultimo_estado = datos_actuales
-                # Envía los datos frescos en formato JSON estructurado para SSE
                 yield f"data: {json.dumps(datos_actuales)}\n\n"
-            
-            # Espera 5 segundos antes de volver a verificar si cambió algo en Odoo
             time.sleep(5)
             
-    return Response(evento_stream(), mimetype='text/event-stream')
+    # Creamos la respuesta y le inyectamos manualmente los permisos CORS que el navegador exige
+    response = Response(evento_stream(), mimetype='text/event-stream')
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 if __name__ == '__main__':
     # Configuración óptima para producción en Render con soporte multi-hilo
